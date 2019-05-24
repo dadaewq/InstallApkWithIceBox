@@ -10,13 +10,14 @@ import android.support.v4.content.FileProvider;
 import android.util.AndroidRuntimeException;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.catchingnow.icebox.sdk_client.IceBox;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
-import com.catchingnow.icebox.sdk_client.IceBox;
 
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -33,7 +34,7 @@ public class MainActivity extends Activity implements ICommanderCallback {
         if (getIntent().getData() != null) {
             apkCommander = new APKCommander(this, getIntent().getData(), this);
         } else {
-            showToast("读取 APK 失败");
+            showToast(getString(R.string.failed_read));
         }
     }
 
@@ -51,8 +52,8 @@ public class MainActivity extends Activity implements ICommanderCallback {
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(success -> {
-                    Toast.makeText(this, success ? "安装成功" : "安装失败", Toast.LENGTH_SHORT).show();
-                    if(mapkinfo.isFakePath())
+                    Toast.makeText(this, success ? getString(R.string.success_install) : getString(R.string.failed_install), Toast.LENGTH_SHORT).show();
+                    if (mapkinfo.isFakePath())
                         deleteSingleFile(mapkinfo.getApkFile().getPath());
                 }, Throwable::printStackTrace);
     }
@@ -75,6 +76,7 @@ public class MainActivity extends Activity implements ICommanderCallback {
     private void showToast(final String text) {
         runOnUiThread(() -> Toast.makeText(MainActivity.this, text, Toast.LENGTH_SHORT).show());
     }
+
     private void disposeSafety() {
         if (mSubscribe != null && !mSubscribe.isDisposed()) mSubscribe.dispose();
         mSubscribe = null;
@@ -94,13 +96,14 @@ public class MainActivity extends Activity implements ICommanderCallback {
     public void onApkPreInstall(ApkInfo apkInfo) {
         showToast(getString(R.string.start_install, apkInfo.getApkFile().getPath()));
     }
+
     class APKCommander {
 
         private final Context context;
         private final Uri uri;
-        private ApkInfo mApkInfo;
         private final ICommanderCallback callback;
         private final Handler handler;
+        private ApkInfo mApkInfo;
 
         APKCommander(Context context, Uri uri, ICommanderCallback commanderCallback) {
             this.context = context;
@@ -120,7 +123,7 @@ public class MainActivity extends Activity implements ICommanderCallback {
                 super.run();
                 handler.post(() -> callback.onApkPreInstall(mApkInfo));
                 new Thread(() -> {
-                    handler.post(() -> installApp(mApkInfo,mApkInfo.getApkFile().getPath()));
+                    handler.post(() -> installApp(mApkInfo, mApkInfo.getApkFile().getPath()));
                     finish();
                 }).start();
             }
@@ -134,11 +137,15 @@ public class MainActivity extends Activity implements ICommanderCallback {
                     handler.post(callback::onStartParseApk);
                     mApkInfo = new ApkInfo();
                     String apkSourcePath = ContentUriUtils.getPath(context, uri);
+
+//                    Log.e("uri",uri+"");
                     if (apkSourcePath == null) {
-                        mApkInfo.setFakePath(true);
+                        mApkInfo.setFakePath();
                         File tempFile = new File(context.getExternalCacheDir(), System.currentTimeMillis() + ".apk");
                         try {
+//                            Log.e("TAG",context.getContentResolver()+"");
                             InputStream is = context.getContentResolver().openInputStream(uri);
+//                            Log.e("TAG", is+"");
                             if (is != null) {
                                 OutputStream fos = new FileOutputStream(tempFile);
                                 byte[] buf = new byte[4096 * 1024];
@@ -154,9 +161,13 @@ public class MainActivity extends Activity implements ICommanderCallback {
                             e.printStackTrace();
                         }
                         mApkInfo.setApkFile(tempFile);
+//                        Log.e("tempFile",mApkInfo.getApkFile().getPath()+"");
                     } else {
                         mApkInfo.setApkFile(new File(apkSourcePath));
                     }
+
+//                    Log.e("mApkInfo",mApkInfo.getApkFile().getPath()+"");
+
                     handler.post(callback::onApkParsed);
                 } catch (Exception e) {
                     handler.post(callback::onApkParsed);

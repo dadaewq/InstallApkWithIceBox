@@ -6,19 +6,20 @@ class ApkInfo {
     private File apkFile;
     private boolean isFakePath;
 
-    void setApkFile(File apkFile) {
-        this.apkFile = apkFile;
+    void setFakePath() {
+        isFakePath = true;
     }
 
-    void setFakePath(boolean fakePath) {
-        isFakePath = fakePath;
-    }
     boolean isFakePath() {
         return isFakePath;
     }
 
     File getApkFile() {
         return apkFile;
+    }
+
+    void setApkFile(File apkFile) {
+        this.apkFile = apkFile;
     }
 
 }

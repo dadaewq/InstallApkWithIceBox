@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Install Apk With IceBox</string>
-    <string name="parsing">解析中…</string>
-    <string name="start_install">开始安装 %s</string>
+    <string name="parsing">Parsing…</string>
+    <string name="start_install">Start installing  %s</string>
+    <string name="hide_icon">Permission granted，Desktop icon will be hidden</string>
+    <string name="failed_read">Reading apk failed</string>
+    <string name="success_install">Successful</string>
+    <string name="failed_install">Failed</string>
 </resources>
